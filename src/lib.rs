@@ -29,11 +29,13 @@ fn dist_sq(v1: &Vec<f32>, v2: &Vec<f32>) -> f32 {
     sum
 }
 
-fn closest_index(v: &Vec<f32>, locations: &Vec<Vec<f32>>) -> usize {
+fn closest_index<F>(v: &Vec<f32>, locations: &Vec<Vec<f32>>, dist: F) -> usize
+    where F: Fn(&Vec<f32>, &Vec<f32>) -> f32 {
+
     let mut closest_idx = 0usize;
-    let mut closest_dist_sq = dist_sq(v, &locations[0]);
+    let mut closest_dist_sq = dist(v, &locations[0]);
     for i in 1..locations.len() {
-        let dist = dist_sq(v, &locations[i]);
+        let dist = dist(v, &locations[i]);
         if dist < closest_dist_sq {
             closest_idx = i;
             closest_dist_sq = dist;
@@ -43,7 +45,9 @@ fn closest_index(v: &Vec<f32>, locations: &Vec<Vec<f32>>) -> usize {
     closest_idx
 }
 
-fn bucket_and_center(data: &Vec<Vec<f32>>, centroids: &Vec<Vec<f32>>, n: usize) -> Vec<Vec<f32>> {
+fn bucket_and_center<F>(data: &Vec<Vec<f32>>, centroids: &Vec<Vec<f32>>, n: usize, dist: F) -> Vec<Vec<f32>>
+    where F: Fn(&Vec<f32>, &Vec<f32>) -> f32 {
+
     // for each data point, find the closest centroid and sum the component values
     let mut sums = vec![];
     let mut counts = vec![0; centroids.len()];
@@ -51,7 +55,7 @@ fn bucket_and_center(data: &Vec<Vec<f32>>, centroids: &Vec<Vec<f32>>, n: usize) 
         sums.push(vec![0f32; n]);
     }
     for d in data {
-        let index = closest_index(d, centroids);
+        let index = closest_index(d, centroids, &dist);
         sums[index] = add(&sums[index], d);
         counts[index] = counts[index] + 1;
     }
@@ -66,7 +70,9 @@ fn bucket_and_center(data: &Vec<Vec<f32>>, centroids: &Vec<Vec<f32>>, n: usize) 
     sums
 }
 
-pub fn k_means(data: &Vec<Vec<f32>>, k: usize, n: usize, iterations: u32, lower: f32, upper: f32) -> Vec<Vec<f32>> {
+pub fn k_means_with_distance<F>(data: &Vec<Vec<f32>>, k: usize, n: usize, iterations: u32, lower: f32, upper: f32, dist: F) -> Vec<Vec<f32>>
+    where F: Fn(&Vec<f32>, &Vec<f32>) -> f32 {
+
     // make initial guesses
     let mut rng = rand::XorShiftRng::new_unseeded(); // TODO: use seed
     let mut centers: Vec<Vec<f32>> = vec![];
@@ -79,8 +85,12 @@ pub fn k_means(data: &Vec<Vec<f32>>, k: usize, n: usize, iterations: u32, lower:
     }
 
     for _ in 0..iterations {
-        centers = bucket_and_center(data, &centers, n);
+        centers = bucket_and_center(data, &centers, n, &dist);
     }
 
     centers
+}
+
+pub fn k_means(data: &Vec<Vec<f32>>, k: usize, n: usize, iterations: u32, lower: f32, upper: f32) -> Vec<Vec<f32>> {
+    k_means_with_distance(data, k, n, iterations, lower, upper, dist_sq)
 }
