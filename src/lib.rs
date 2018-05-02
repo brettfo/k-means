@@ -68,7 +68,7 @@ fn bucket_and_center(data: &Vec<Vec<f32>>, centroids: &Vec<Vec<f32>>, n: usize) 
 
 pub fn k_means<'a>(data: &'a Vec<Vec<f32>>, k: usize, n: usize, iterations: u32, lower: f32, upper: f32) -> Vec<Vec<f32>> {
     // make initial guesses
-    let mut rng = rand::thread_rng(); // TODO: use seed
+    let mut rng = rand::XorShiftRng::new_unseeded(); // TODO: use seed
     let mut centers: Vec<Vec<f32>> = vec![];
     for _ in 0..k {
         let mut vec = vec![];
