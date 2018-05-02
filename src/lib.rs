@@ -43,58 +43,44 @@ fn closest_index<'a>(v: &'a Vec<f32>, locations: &'a Vec<Vec<f32>>) -> usize {
     closest_idx
 }
 
-fn bucket<'a>(data: &'a Vec<Vec<f32>>, centroids: &Vec<Vec<f32>>) -> Vec<Vec<&'a Vec<f32>>> {
-    let mut buckets: Vec<Vec<&Vec<f32>>> = vec![];
+fn bucket_and_center(data: &Vec<Vec<f32>>, centroids: &Vec<Vec<f32>>, n: usize) -> Vec<Vec<f32>> {
+    // for each data point, find the closest centroid and sum the component values
+    let mut sums = vec![];
+    let mut counts = vec![0; centroids.len()];
     for _ in 0..centroids.len() {
-        buckets.push(vec![]);
+        sums.push(vec![0f32; n]);
+    }
+    for d in data {
+        let index = closest_index(d, centroids);
+        sums[index] = add(&sums[index], d);
+        counts[index] = counts[index] + 1;
     }
 
-    for point in data {
-        let bucket_id = closest_index(point, centroids);
-        buckets[bucket_id].push(point);
+    // divide each component value by the number of items in that bucket
+    for (i, s) in sums.iter_mut().enumerate() {
+        for v in s.iter_mut() {
+            *v = *v / (counts[i] as f32);
+        }
     }
 
-    buckets
+    sums
 }
 
-fn centroids<'a>(buckets: &Vec<Vec<&'a Vec<f32>>>, n: usize) -> Vec<Vec<f32>> {
-    let mut centroids: Vec<Vec<f32>> = vec![];
-    for b in buckets {
-        let mut center_sum = vec![0f32; n];
-        for v in b {
-            center_sum = add(v, &center_sum);
-        }
-
-        let mut centroid = vec![];
-        for v in center_sum {
-            centroid.push(v / (b.len() as f32));
-        }
-        centroids.push(centroid);
-    }
-
-    centroids
-}
-
-pub fn k_means<'a>(data: &'a Vec<Vec<f32>>, k: usize, n: usize, lower: f32, upper: f32) -> Vec<Vec<f32>> {
+pub fn k_means<'a>(data: &'a Vec<Vec<f32>>, k: usize, n: usize, iterations: u32, lower: f32, upper: f32) -> Vec<Vec<f32>> {
     // make initial guesses
     let mut rng = rand::thread_rng(); // TODO: use seed
-    let mut guesses: Vec<Vec<f32>> = vec![];
+    let mut centers: Vec<Vec<f32>> = vec![];
     for _ in 0..k {
         let mut vec = vec![];
         for _ in 0..n {
             vec.push(rng.gen_range::<f32>(lower, upper));
         }
-        guesses.push(vec);
+        centers.push(vec);
     }
 
-    // bucket each value
-    let buckets = bucket(data, &guesses);
+    for _ in 0..iterations {
+        centers = bucket_and_center(data, &centers, n);
+    }
 
-    // find actual bucket centroids
-    let c = centroids(&buckets, n);
-
-    // re-bucket
-    let final_buckets = bucket(data, &c);
-    let final_centroids = centroids(&final_buckets, n);
-    final_centroids
+    centers
 }
