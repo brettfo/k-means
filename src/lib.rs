@@ -29,7 +29,7 @@ fn dist_sq(v1: &Vec<f32>, v2: &Vec<f32>) -> f32 {
     sum
 }
 
-fn closest_index<'a>(v: &'a Vec<f32>, locations: &'a Vec<Vec<f32>>) -> usize {
+fn closest_index(v: &Vec<f32>, locations: &Vec<Vec<f32>>) -> usize {
     let mut closest_idx = 0usize;
     let mut closest_dist_sq = dist_sq(v, &locations[0]);
     for i in 1..locations.len() {
@@ -66,7 +66,7 @@ fn bucket_and_center(data: &Vec<Vec<f32>>, centroids: &Vec<Vec<f32>>, n: usize) 
     sums
 }
 
-pub fn k_means<'a>(data: &'a Vec<Vec<f32>>, k: usize, n: usize, iterations: u32, lower: f32, upper: f32) -> Vec<Vec<f32>> {
+pub fn k_means(data: &Vec<Vec<f32>>, k: usize, n: usize, iterations: u32, lower: f32, upper: f32) -> Vec<Vec<f32>> {
     // make initial guesses
     let mut rng = rand::XorShiftRng::new_unseeded(); // TODO: use seed
     let mut centers: Vec<Vec<f32>> = vec![];
