@@ -11,6 +11,17 @@ fn add(v1: &Vec<f32>, v2: &Vec<f32>) -> Vec<f32> {
         .map(|(a, b)| a + b).collect()
 }
 
+#[test]
+fn test_add() {
+    assert_eq!(
+        vec![5.0, 7.0, 9.0],
+        add(
+            &vec![1.0, 2.0, 3.0],
+            &vec![4.0, 5.0, 6.0]
+        )
+    );
+}
+
 fn dist_sq(v1: &Vec<f32>, v2: &Vec<f32>) -> f32 {
     if v1.len() != v2.len() {
         panic!("TODO: vectors are mis-sized");
@@ -19,6 +30,17 @@ fn dist_sq(v1: &Vec<f32>, v2: &Vec<f32>) -> f32 {
     v1.iter().zip(v2.iter())
         .map(|(a, b)| a - b)
         .map(|t| t * t).sum()
+}
+
+#[test]
+fn test_dist_sq() {
+    assert_eq!(
+        25.0,
+        dist_sq(
+            &vec![0.0, 0.0],
+            &vec![4.0, 3.0]
+        )
+    );
 }
 
 fn closest_index<F>(v: &Vec<f32>, locations: &Vec<Vec<f32>>, dist: F) -> usize
@@ -37,6 +59,24 @@ fn closest_index<F>(v: &Vec<f32>, locations: &Vec<Vec<f32>>, dist: F) -> usize
     );
 
     closest_idx
+}
+
+#[test]
+fn test_closest_index() {
+    assert_eq!(
+        1,
+        closest_index(
+            &vec![1.9, 1.9],
+            &vec![
+                vec![1.0, 1.0],
+                vec![2.0, 2.0],
+                vec![3.0, 3.0],
+                vec![4.0, 4.0],
+                vec![5.0, 5.0],
+            ],
+            dist_sq
+        )
+    );
 }
 
 fn bucket_and_center<F>(data: &Vec<Vec<f32>>, centroids: &Vec<Vec<f32>>, n: usize, dist: F) -> Vec<Vec<f32>>
