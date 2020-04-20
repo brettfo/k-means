@@ -8,7 +8,8 @@ fn add(v1: &Vec<f32>, v2: &Vec<f32>) -> Vec<f32> {
     }
 
     v1.iter().zip(v2.iter())
-        .map(|(a, b)| a + b).collect()
+        .map(|(a, b)| a + b)
+        .collect()
 }
 
 #[test]
@@ -29,7 +30,8 @@ fn dist_sq(v1: &Vec<f32>, v2: &Vec<f32>) -> f32 {
 
     v1.iter().zip(v2.iter())
         .map(|(a, b)| a - b)
-        .map(|t| t * t).sum()
+        .map(|t| t * t)
+        .sum()
 }
 
 #[test]
