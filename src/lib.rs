@@ -7,12 +7,8 @@ fn add(v1: &Vec<f32>, v2: &Vec<f32>) -> Vec<f32> {
         panic!("TODO: vectors are mis-sized");
     }
 
-    let mut result = vec![];
-    for i in 0..v1.len() {
-        result.push(v1[i] + v2[i]);
-    }
-
-    result
+    v1.iter().zip(v2.iter())
+        .map(|(a, b)| a + b).collect()
 }
 
 fn dist_sq(v1: &Vec<f32>, v2: &Vec<f32>) -> f32 {
@@ -20,13 +16,9 @@ fn dist_sq(v1: &Vec<f32>, v2: &Vec<f32>) -> f32 {
         panic!("TODO: vectors are mis-sized");
     }
 
-    let mut sum = 0f32;
-    for i in 0..v1.len() {
-        let t = v1[i] - v2[i];
-        sum = sum + (t * t);
-    }
-
-    sum
+    v1.iter().zip(v2.iter())
+        .map(|(a, b)| a - b)
+        .map(|t| t * t).sum()
 }
 
 fn closest_index<F>(v: &Vec<f32>, locations: &Vec<Vec<f32>>, dist: F) -> usize
