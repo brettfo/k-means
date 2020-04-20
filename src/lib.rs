@@ -1,6 +1,6 @@
+extern crate rand_core;
 extern crate rand;
-
-use rand::Rng;
+extern crate rand_xorshift;
 
 fn add(v1: &Vec<f32>, v2: &Vec<f32>) -> Vec<f32> {
     if v1.len() != v2.len() {
@@ -70,16 +70,16 @@ fn bucket_and_center<F>(data: &Vec<Vec<f32>>, centroids: &Vec<Vec<f32>>, n: usiz
     sums
 }
 
-pub fn k_means_with_distance<F>(data: &Vec<Vec<f32>>, k: usize, n: usize, iterations: u32, lower: f32, upper: f32, dist: F) -> Vec<Vec<f32>>
-    where F: Fn(&Vec<f32>, &Vec<f32>) -> f32 {
-
+pub fn k_means_with_rng_and_distance<R, F>(data: &Vec<Vec<f32>>, k: usize, n: usize, iterations: u32, lower: f32, upper: f32, rng: &mut R, dist: F) -> Vec<Vec<f32>>
+    where F: Fn(&Vec<f32>, &Vec<f32>) -> f32,
+          R: rand::Rng
+{
     // make initial guesses
-    let mut rng = rand::XorShiftRng::new_unseeded(); // TODO: use seed
     let mut centers: Vec<Vec<f32>> = vec![];
     for _ in 0..k {
         let mut vec = vec![];
         for _ in 0..n {
-            vec.push(rng.gen_range::<f32>(lower, upper));
+            vec.push(rng.gen_range(lower, upper));
         }
         centers.push(vec);
     }
@@ -91,6 +91,43 @@ pub fn k_means_with_distance<F>(data: &Vec<Vec<f32>>, k: usize, n: usize, iterat
     centers
 }
 
-pub fn k_means(data: &Vec<Vec<f32>>, k: usize, n: usize, iterations: u32, lower: f32, upper: f32) -> Vec<Vec<f32>> {
+pub fn k_means_with_rng<R>(data: &Vec<Vec<f32>>, k: usize, n: usize, iterations: u32, lower: f32, upper: f32, rng: &mut R) -> Vec<Vec<f32>>
+    where R: rand::Rng
+{
+    k_means_with_rng_and_distance(data, k, n, iterations, lower, upper, rng, dist_sq)
+}
+
+pub fn k_means_with_distance<F>(data: &Vec<Vec<f32>>, k: usize, n: usize, iterations: u32, lower: f32, upper: f32, dist: F) -> Vec<Vec<f32>>
+    where F: Fn(&Vec<f32>, &Vec<f32>) -> f32
+{
+    let mut rng = rand::thread_rng();
+    k_means_with_rng_and_distance(data, k, n, iterations, lower, upper, &mut rng, dist)
+}
+
+pub fn k_means_auto(data: &Vec<Vec<f32>>, k: usize, n: usize, iterations: u32, lower: f32, upper: f32) -> Vec<Vec<f32>> {
     k_means_with_distance(data, k, n, iterations, lower, upper, dist_sq)
+}
+
+#[test]
+fn k_means_with_known_seed() {
+    let data: Vec<Vec<f32>> = vec![
+        // converge to (0.5, 0.5)
+        vec![0.0, 0.0],
+        vec![0.0, 1.0],
+        vec![1.0, 0.0],
+        vec![1.0, 1.0],
+
+        // converge to (10.5, 10.5)
+        vec![9.0, 9.0],
+        vec![9.0, 10.0],
+        vec![10.0, 9.0],
+        vec![10.0, 10.0],
+    ];
+    let mut rng: rand_xorshift::XorShiftRng = rand_core::SeedableRng::seed_from_u64(42);
+    let result = k_means_with_rng(&data, 2, 2, 4, 0.0, 10.0, &mut rng);
+    let expected: Vec<Vec<f32>> = vec![
+        vec![0.5, 0.5],
+        vec![9.5, 9.5],
+    ];
+    assert_eq!(expected, result);
 }
